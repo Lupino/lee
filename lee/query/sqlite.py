@@ -1,11 +1,6 @@
 import sqlite3 as sqlite
-import os
 from lee import conf
 from lee.logging import logger
-
-base_path = os.path.dirname(conf.path)
-if not os.path.exists(base_path):
-    os.makedirs(base_path)
 
 map_sqlite_types = {
     'str': 'TEXT',

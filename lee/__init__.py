@@ -1,5 +1,6 @@
 from . import conf
 import urllib.parse
+import os
 def connect(path, memcached=False, lru_cache=False, cache_timeout=0):
     '''connect to the database
     @path:
@@ -26,6 +27,9 @@ def connect(path, memcached=False, lru_cache=False, cache_timeout=0):
     else:
         conf.path = p.netloc + p.path
         conf.use_mysql = False
+        base_path = os.path.dirname(conf.path)
+        if not os.path.exists(base_path):
+            os.makedirs(base_path)
 
     conf.memcached = memcached
     conf.lru_cache = lru_cache
