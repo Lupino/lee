@@ -1,6 +1,6 @@
 from _thread import RLock
+from lee import conf
 _cache = {}
-_cache_max = 128
 full = False
 key_list = []
 
@@ -28,7 +28,7 @@ def set(key, val, *args, **kwargs):
         else:
             key_list.insert(0, key)
             _cache[key] = val
-            full = (len(_cache) >= _cache_max)
+            full = (len(_cache) >= conf.lru_cache_max)
 
 def delete(key, *args, **kwargs):
     global _cache, full, key_list, lock
@@ -36,7 +36,7 @@ def delete(key, *args, **kwargs):
         if key in key_list:
             key_list.remove(key)
             _cache.pop(key)
-            full = (len(_cache) >= _cache_max)
+            full = (len(_cache) >= conf.lru_cache_max)
 
 def incr(key, *args, **kwargs):
     global _cache, full, key_list, lock
@@ -55,7 +55,7 @@ def incr(key, *args, **kwargs):
         else:
             key_list.insert(0, key)
             _cache[key] = val
-            full = (len(_cache) >= _cache_max)
+            full = (len(_cache) >= conf.lru_cache_max)
 
         return _cache.get(key)
 
@@ -76,6 +76,6 @@ def decr(key, *args, **kwargs):
         else:
             key_list.insert(0, key)
             _cache[key] = val
-            full = (len(_cache) >= _cache_max)
+            full = (len(_cache) >= conf.lru_cache_max)
 
         return _cache.get(key)
