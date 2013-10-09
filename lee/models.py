@@ -1,16 +1,17 @@
-from .conf import cache_timeout
+from . import conf
 
 class Model(dict):
 
     table_name = 'default'
     columns = []
     auto_cache = True
-    cache_timeout = cache_timeout
+    cache_timeout = None
     auto_create_table = True
 
     def __init__(self, table, payload = {}):
         dict.__init__(self, payload)
         self._table = table
+        self.cache_timeout = self.cache_timeout or conf.cache_timeout
 
     def save(self):
         return self._table.save(self)

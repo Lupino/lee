@@ -11,7 +11,6 @@ def connect(path, memcached=False, lru_cache=False, cache_timeout=0):
     @lru_cache: bool if use lru_cache set it True
     @cache_timeout: only for memcached timeout
     '''
-    global query, Table, Model
     p = urllib.parse.urlparse(path)
     if p.scheme == 'mysql':
         conf.mysql = {}
@@ -36,10 +35,7 @@ def connect(path, memcached=False, lru_cache=False, cache_timeout=0):
     conf.memcached = memcached
     conf.lru_cache = lru_cache
     conf.cache_timeout = cache_timeout
-    from .table import Table
-    from .models import Model
-    from .query import query
 
-query = None
-Table = None
-Model = None
+from .table import Table
+from .models import Model
+from .query import query

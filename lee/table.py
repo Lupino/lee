@@ -5,14 +5,16 @@ from lee.logging import logger
 
 _query = query
 
-tables = show_tables()
-
 class Table(object):
+    TABLES = None
     def __init__(self, model):
         self._model = model
 
-        if model.auto_create_table and model.table_name not in tables:
-            tables.append(model.table_name)
+        if Table.TABLES is None:
+            Table.TABLES = show_tables()
+
+        if model.auto_create_table and model.table_name not in Table.TABLES:
+            Table.TABLES.append(model.table_name)
             create_table(model.table_name, model.columns)
 
         primarys = []
