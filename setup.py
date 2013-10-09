@@ -13,7 +13,7 @@ requires = [] # oursql, python3-memcache, sqlite3
 
 setup(
     name='lee',
-    version='0.0.1',
+    version='0.0.2',
     description='The orm framework for mysql and sqlite3',
     author='Li Meng Jun',
     author_email='lmjubuntu@gmail.com',
