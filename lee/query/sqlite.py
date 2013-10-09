@@ -15,15 +15,12 @@ map_sqlite_types = {
 }
 
 class query:
-    def __init__(self, keyword='cur', autocommit=False, use_conn=False):
+    def __init__(self, keyword='cur', autocommit=False):
         '''
             @keyword: default is cur
             @autocommit: if need commit set it True. default is False
-            @use_conn: if want to use connection set it True.
-                       default is False and using cursor
         '''
         self._autocommit = autocommit
-        self._use_conn = use_conn
         self._keyword = keyword
 
     def __call__(self, fn):
@@ -43,11 +40,8 @@ class query:
 
             conn.row_factory = dict_factory
 
-            if self._use_conn:
-                kws[self._keyword] = conn
-            else:
-                cur = conn.cursor()
-                kws[self._keyword] = cur
+            cur = conn.cursor()
+            kws[self._keyword] = cur
 
             ret = fn(*args, **kws)
 
