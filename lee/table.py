@@ -47,9 +47,9 @@ class Table(object):
                     ret = unparse(ret, self._model.columns)
                     return self._model(self, ret)
 
-            sql = 'SELECT * FROM `%s` WHERE `%s` = ?'%(self._model.table_name, column['name'])
+            sql = 'SELECT * FROM `{}` WHERE `{}` = ?'.format(self._model.table_name, column['name'])
             args = (uniq_key, )
-            logger.debug('Query> SQL: %s | ARGS: %s'%(sql, args))
+            logger.debug('Query> SQL: {} | ARGS: {}'.format(sql, args))
 
             cur.execute(sql, args)
 
@@ -64,7 +64,7 @@ class Table(object):
         if column.get('primary'):
             self._find_by_id = _gen_query
         else:
-            setattr(self, 'find_by_%s'%column['name'], _gen_query)
+            setattr(self, 'find_by_{}'.format(column['name']), _gen_query)
 
     def gen_primary_query(self, primarys):
         pri_len = len(primarys)
@@ -109,16 +109,16 @@ class Table(object):
                         mc_key = mc.gen_key(self._model.table_name, col_name, col_value)
                         mc.delete(mc_key)
 
-            sql = 'DELETE FROM `%s` WHERE `%s` = ?'%(self._model.table_name, column['name'])
+            sql = 'DELETE FROM `{}` WHERE `{}` = ?'.format(self._model.table_name, column['name'])
             args = (uniq_key, )
-            logger.debug('Query> SQL: %s | ARGS: %s'%(sql, args))
+            logger.debug('Query> SQL: {} | ARGS: {}'.format(sql, args))
 
             cur.execute(sql, args)
 
         if column.get('primary'):
             self._del_by_id = _gen_del
         else:
-            setattr(self, 'del_by_%s'%column['name'], _gen_del)
+            setattr(self, 'del_by_{}'.format(column['name']), _gen_del)
 
     def gen_primary_del(self, primarys):
         pri_len = len(primarys)
@@ -175,7 +175,7 @@ class Table(object):
         elif len(uniqs) > 0:
             for column_name, column_value in uniqs:
                 if not old_obj:
-                    find = getattr(self, 'find_by_%s'%column_name)
+                    find = getattr(self, 'find_by_{}'.format(column_name))
                     old_obj = find(column_value)
                     if old_obj:
                         primarys = [[column_name, column_value]]
@@ -185,17 +185,17 @@ class Table(object):
 
         if old_obj:
             old_obj.update(obj)
-            part = ', '.join(['`%s`= ?'%k for k in use_keys])
+            part = ', '.join(['`{}`= ?'.format(k) for k in use_keys])
             where, values = parse_query(self._model.columns, primarys)
             for val in values:
                 use_values.append(val)
             if len(use_values) < 2:
-                logger.error('UPDATE %s'%str(obj))
+                logger.error('UPDATE {}'.format(str(obj)))
                 return primarys[0][1]
 
-            sql = 'UPDATE `%s` SET %s %s'%(self._model.table_name, part, where)
+            sql = 'UPDATE `{}` SET {} {}'.format(self._model.table_name, part, where)
             args = tuple(use_values)
-            logger.debug('Query> SQL: %s | ARGS: %s'%(sql, args))
+            logger.debug('Query> SQL: {} | ARGS: {}'.format(sql, args))
 
             cur.execute(sql, args)
 
@@ -230,12 +230,12 @@ class Table(object):
                         val = val()
                     use_values.append(val)
 
-            part_k = ', '.join(['`%s`'%k for k in use_keys])
+            part_k = ', '.join(['`{}`'.format(k) for k in use_keys])
             part_v = ', '.join(['?' for k in use_keys])
 
-            sql = 'INSERT INTO `%s` (%s) VALUES (%s)'%(self._model.table_name, part_k, part_v)
+            sql = 'INSERT INTO `{}` ({}) VALUES ({})'.format(self._model.table_name, part_k, part_v)
             args = tuple(use_values)
-            logger.debug('Query> SQL: %s | ARGS: %s'%(sql, args))
+            logger.debug('Query> SQL: {} | ARGS: {}'.format(sql, args))
 
             cur.execute(sql, args)
 
@@ -252,9 +252,9 @@ class Table(object):
         @_query()
         def _find_one(cur):
 
-            sql = 'SELECT %s FROM `%s` %s'%(column, self._model.table_name, where)
+            sql = 'SELECT {} FROM `{}` {}'.format(column, self._model.table_name, where)
             args = tuple(values)
-            logger.debug('Query> SQL: %s | ARGS: %s'%(sql, args))
+            logger.debug('Query> SQL: {} | ARGS: {}'.format(sql, args))
 
             cur.execute(sql, args)
 
@@ -278,9 +278,9 @@ class Table(object):
         @_query()
         def _find_all(cur):
 
-            sql = 'SELECT %s FROM `%s` %s'%(column, self._model.table_name, where)
+            sql = 'SELECT {} FROM `{}` {}'.format(column, self._model.table_name, where)
             args = tuple(values)
-            logger.debug('Query> SQL: %s | ARGS: %s'%(sql, args))
+            logger.debug('Query> SQL: {} | ARGS: {}'.format(sql, args))
 
             cur.execute(sql, args)
 
@@ -298,7 +298,7 @@ class Table(object):
             for col in self._model.columns:
                 if col.get('unique') or col.get('primary'):
                     uniqs[col['name']] = col.get('default')
-            column = ', '.join(map(lambda x: '`%s`'%x, uniqs.keys()))
+            column = ', '.join(map(lambda x: '`{}`'.format(x), uniqs.keys()))
             old_objs = self.find_all(query, column, limit, order, group, is_or)
 
             for old_obj in old_objs:
@@ -311,9 +311,9 @@ class Table(object):
 
         @_query(autocommit=True)
         def _del_all(cur):
-            sql = 'DELETE FROM `%s` %s'%(self._model.table_name, where)
+            sql = 'DELETE FROM `{}` {}'.format(self._model.table_name, where)
             args = tuple(values)
-            logger.debug('Query> SQL: %s | ARGS: %s'%(sql, args))
+            logger.debug('Query> SQL: {} | ARGS: {}'.format(sql, args))
 
             cur.execute(sql, args)
 

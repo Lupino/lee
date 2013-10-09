@@ -147,16 +147,16 @@ def parse_query(columns, query = None, limit = '', order = None, group= None,
 
         for key, op, val in queries:
             if op == 'like':
-                keys.append('`%s` LIKE "%s"'%(key, val))
+                keys.append('`{}` LIKE "{}"'.format(key, val))
             elif op == 'in':
                 if len(val) > 0:
-                    op = keys.append('`%s` IN (%s)'%(key, ', '.join(['?'] * len(val))))
+                    op = keys.append('`{}` IN ({})'.format(key, ', '.join(['?'] * len(val))))
                     for v in val:
                         values.append(v)
             else:
                 if op == '=':
                     val = parse({key: val}, columns)[key]
-                keys.append('`%s` %s ?'%(key, op))
+                keys.append('`{}` {} ?'.format(key, op))
                 values.append(val)
 
         if len(keys) > 0:
@@ -168,23 +168,23 @@ def parse_query(columns, query = None, limit = '', order = None, group= None,
 
     if order:
         if type(order) == dict:
-            _order = ['ORDER BY `%s` %s'%(key, val) \
+            _order = ['ORDER BY `{}` {}'.format(key, val) \
                     for key, val in order.items()]
         elif type(order) == list:
-            _order = ['ORDER BY `%s`'%key for key in order]
+            _order = ['ORDER BY `{}`'.format(key) for key in order]
         else:
-            _order = ['ORDER BY `%s`'%order]
+            _order = ['ORDER BY `{}`'.format(order)]
 
         where.extend(_order)
 
     if group:
-        _group = ['GROUP BY `%s`'%key for key in group]
+        _group = ['GROUP BY `{}`'.format(key) for key in group]
         where.extend(_group)
 
     if limit:
         limit = str(limit)
         if not limit.startswith('limit'):
-            limit = 'LIMIT %s'%limit
+            limit = 'LIMIT {}'.format(limit)
         where.append(limit)
 
     return ' '.join(where), values

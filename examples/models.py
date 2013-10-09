@@ -27,7 +27,7 @@ class Sequence(Model):
         if use_mysql:
             sql = 'INSERT INTO `sequence` (`name`) VALUES (?) ON DUPLICATE KEY UPDATE `id` = LAST_INSERT_ID(`id` + 1)'
             args = (name, )
-            logger.debug('Query> SQL: %s | ARGS: %s'%(sql, args))
+            logger.debug('Query> SQL: {} | ARGS: {}'.format(sql, args))
             cur.execute(sql, args)
             last_id = cur.lastrowid
         else:
@@ -35,7 +35,7 @@ class Sequence(Model):
             if seq:
                 sql = 'UPDATE `sequence` SET `id` = `id` + 1 WHERE `name` = ?'
                 args = (name, )
-                logger.debug('Query> SQL: %s | ARGS: %s'%(sql, args))
+                logger.debug('Query> SQL: {} | ARGS: {}'.format(sql, args))
                 cur.execute(sql, args)
             else:
                 self._table.save({'name': name})
