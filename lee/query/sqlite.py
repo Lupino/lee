@@ -14,6 +14,32 @@ map_sqlite_types = {
     'float': 'REAL'
 }
 
+def dict_factory(cursor, row):
+    retval = {}
+    for idx, col in enumerate(cursor.description):
+        value = row[idx]
+        key = col[0]
+        if key.startswith('`'):
+            key = key[1:-1]
+        retval[key] = value
+    return retval
+
+
+SQLITE_CONN=None
+def _get_conn(conn=None):
+    global SQLITE_CONN
+    if SQLITE_CONN and not conn:
+        conn = SQLITE_CONN
+
+    if conn is None:
+        conn = sqlite.connect(conf.path)
+
+        conn.row_factory = dict_factory
+
+        SQLITE_CONN = conn
+
+    return conn
+
 class query:
     def __init__(self, keyword='cur', autocommit=False):
         '''
@@ -25,32 +51,27 @@ class query:
 
     def __call__(self, fn):
 
-        def dict_factory(cursor, row):
-            retval = {}
-            for idx, col in enumerate(cursor.description):
-                value = row[idx]
-                key = col[0]
-                if key.startswith('`'):
-                    key = key[1:-1]
-                retval[key] = value
-            return retval
-
         def warpper(*args, **kws):
-            conn = sqlite.connect(conf.path)
+            err_count = 0
+            while err_count < 3:
+                try:
+                    conn = _get_conn()
+                    cur = conn.cursor()
+                    kws[self._keyword] = cur
+                    ret = fn(*args, **kws)
+                    if self._autocommit:
+                        conn.commit()
+                    return ret
+                except sqlite.ProgrammingError as e:
+                    if e.args[0].find('closed') > -1:
+                        global SQLITE_CONN
+                        SQLITE_CONN = None
+                        err_count += 1
+                    else:
+                        break
 
-            conn.row_factory = dict_factory
+                return None
 
-            cur = conn.cursor()
-            kws[self._keyword] = cur
-
-            ret = fn(*args, **kws)
-
-            if self._autocommit:
-                conn.commit()
-
-            conn.close()
-
-            return ret
         return warpper
 
 @query()
