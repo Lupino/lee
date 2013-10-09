@@ -9,3 +9,4 @@ build
 lee.egg-info
 run*
 history.py
+dist
