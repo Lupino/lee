@@ -9,7 +9,7 @@ packages = [
     'lee.cache'
 ]
 
-requires = ['sqlite3'] # oursql, python3-memcache
+requires = [] # oursql, python3-memcache, sqlite3
 
 setup(
     name='lee',
