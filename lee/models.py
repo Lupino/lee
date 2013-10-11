@@ -5,7 +5,7 @@ class Model(dict):
     table_name = 'default'
     columns = []
     auto_cache = True
-    cache_timeout = None
+    cache_timeout = 0
     auto_create_table = True
 
     def __init__(self, table, payload = {}):
