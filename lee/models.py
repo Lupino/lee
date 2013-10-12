@@ -14,7 +14,7 @@ class Model(dict):
         self.cache_timeout = self.cache_timeout or conf.cache_timeout
 
     def save(self):
-        return self._table.save(self)
+        return self._table.save(self.copy())
 
     def delete(self):
         pris = list(filter(lambda x: x.get('primary'), self.columns))

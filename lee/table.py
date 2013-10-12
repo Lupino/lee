@@ -186,6 +186,7 @@ class Table(object):
                 use_values.append(column_value)
 
         if old_obj:
+            old_obj = old_obj.copy()
             old_obj.update(obj)
             part = ', '.join(['`{}`= ?'.format(k) for k in use_keys])
             where, values = parse_query(self._model.columns, primarys)
