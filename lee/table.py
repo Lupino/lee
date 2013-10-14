@@ -198,10 +198,7 @@ class Table(object):
             cur.execute(sql, args)
 
             if self._model.auto_cache and conf.is_cache:
-                new_obj = old_obj.copy()
-                new_obj.update(obj)
                 self._del_cache(old_obj)
-                self._cache_set(new_obj)
 
             return primarys[0][1]
         else:
