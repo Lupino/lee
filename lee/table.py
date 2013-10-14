@@ -2,6 +2,7 @@ from .query import create_table, show_tables, diff_table, query
 from .utils import unparse, parse, parse_query
 from . import cache as mc
 from lee.logging import logger
+from lee import conf
 
 _query = query
 
@@ -42,7 +43,7 @@ class Table(object):
 
         @query()
         def _gen_query(uniq_key, cur):
-            if self._model.auto_cache:
+            if self._model.auto_cache and conf.is_cache:
                 mc_key = mc.gen_key(self._model.table_name, column['name'], uniq_key)
                 ret = mc.get(mc_key)
                 if ret:
@@ -58,8 +59,8 @@ class Table(object):
             ret = cur.fetchone()
             if ret:
                 ret = unparse(ret, self._model.columns)
-                if self._model.auto_cache:
-                    mc.set(mc_key, ret, self._model.cache_timeout)
+                if self._model.auto_cache and conf.is_cache:
+                    self._cache_set(ret)
                 return self._model(self, ret)
             return None
 
@@ -75,16 +76,19 @@ class Table(object):
         keys = list(map(lambda x: x['name'], primarys))
         def gen(*args):
             if len(args) == pri_len:
-                if self._model.auto_cache:
+                if self._model.auto_cache and conf.is_cache:
                     cols = []
-                    for row in zip(keys, args):
-                        for v in row:
-                            cols.append(v)
+                    for k, v in zip(keys, args):
+                        cols.append(k)
+                        cols.append(v)
                     mc_key = mc.gen_key(self._model.table_name, *cols)
                     ret = mc.get(mc_key)
                     if ret:
                         return self._model(self, ret)
-                return self.find_one(list(zip(keys, args)))
+                ret = self.find_one(list(zip(keys, args)))
+                if self._model.auto_cache and conf.is_cache:
+                    self._cache_set(ret)
+                return ret
             return None
 
         self._find_by_id = gen
@@ -96,7 +100,7 @@ class Table(object):
 
         @query(autocommit=True)
         def _gen_del(uniq_key, cur):
-            if self._model.auto_cache:
+            if self._model.auto_cache and conf.is_cache:
                 mc_key = mc.gen_key(self._model.table_name, column['name'], uniq_key)
                 obj = mc.get(mc_key)
 
@@ -129,13 +133,6 @@ class Table(object):
         keys = list(map(lambda x: x['name'], primarys))
         def gen(*args):
             if len(args) == pri_len:
-                if self._model.auto_cache:
-                    cols = []
-                    for row in zip(keys, args):
-                        for v in row:
-                            cols.append(v)
-                    mc_key = mc.gen_key(self._model.table_name, *cols)
-                    mc.delete(mc_key)
                 return self.del_all(list(zip(keys, args)))
             return None
 
@@ -186,8 +183,6 @@ class Table(object):
                 use_values.append(column_value)
 
         if old_obj:
-            old_obj = old_obj.copy()
-            old_obj.update(obj)
             part = ', '.join(['`{}`= ?'.format(k) for k in use_keys])
             where, values = parse_query(self._model.columns, primarys)
             for val in values:
@@ -202,23 +197,12 @@ class Table(object):
 
             cur.execute(sql, args)
 
-            if self._model.auto_cache:
-                if len(primarys) == 1:
-                    uniqs.extend(primarys)
-                else:
-                    cols = []
-                    for primary in primarys:
-                        for v in primary:
-                            cols.append(v)
-                    mc_key = mc.gen_key(self._model.table_name, *cols)
-                    mc.delete(mc_key)
-                    mc.set(mc_key, old_obj, self._model.cache_timeout)
+            if self._model.auto_cache and conf.is_cache:
+                new_obj = old_obj.copy()
+                new_obj.update(obj)
+                self._del_cache(old_obj)
+                self._cache_set(new_obj)
 
-                for column_name, column_value in uniqs:
-                    if column_value:
-                        mc_key = mc.gen_key(self._model.table_name, column_name, column_value)
-                        mc.delete(mc_key)
-                        mc.set(mc_key, old_obj, self._model.cache_timeout)
             return primarys[0][1]
         else:
             for primary in primarys:
@@ -275,6 +259,7 @@ class Table(object):
         if limit and page:
             start = int(limit) * int(page)
             limit = '{}, {}'.format(start, limit)
+
         where, values = parse_query(self._model.columns, query, limit, order, group,
                 is_or)
 
@@ -292,11 +277,51 @@ class Table(object):
         return [self._model(self, unparse(ret, self._model.columns)) \
                 for ret in _find_all()]
 
+    def _del_cache(self, obj):
+        obj = obj.copy()
+        pri, uniqs = self._gen_cache_keys(obj)
+        uniqs.append(pri)
+
+        for mc_key in uniqs:
+            mc.delete(mc_key)
+
+    def _cache_set(self, obj):
+        obj = obj.copy()
+        pri, uniqs = self._gen_cache_keys(obj)
+        uniqs.append(pri)
+
+        for mc_key in uniqs:
+            mc.set(mc_key, obj, self._model.cache_timeout)
+
+    def _gen_cache_keys(self, obj):
+        retval = {'pri': None, 'uniqs': []}
+        uniqs = []
+        pris = []
+        for col in self._model.columns:
+            if col.get('primary'):
+                pris.append(col)
+            elif col.get('unique'):
+                uniqs.append(col)
+
+        for col in uniqs:
+            mc_key = mc.gen_key(self._model.table_name, col['name'], obj.get(col['name'], col.get('default')))
+            retval['uniqs'].append(mc_key)
+
+        cols = []
+        for pri in pris:
+            cols.append(pri['name'])
+            cols.append(obj.get(pri['name'], pri.get('default')))
+
+        if cols:
+            mc_key = mc.gen_key(self._model.table_name, *cols)
+            retval['pri'] = mc_key
+
+        return retval['pri'], retval['uniqs']
 
     def del_all(self, query = None, limit = '', order = None, group = None,
             is_or = False):
 
-        if self._model.auto_cache:
+        if self._model.auto_cache and conf.is_cache:
             uniqs = {}
             for col in self._model.columns:
                 if col.get('unique') or col.get('primary'):
@@ -305,9 +330,7 @@ class Table(object):
             old_objs = self.find_all(query, column, limit, order, group, is_or)
 
             for old_obj in old_objs:
-                for k, v in uniqs.items():
-                    mc_key = mc.gen_key(self._model.table_name, k, old_obj.get(k, v))
-                    mc.delete(mc_key)
+                self._del_cache(old_obj)
 
         where, values = parse_query(self._model.columns, query, limit, order, group,
                 is_or)

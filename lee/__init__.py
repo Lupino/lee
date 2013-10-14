@@ -38,6 +38,8 @@ def connect(path, memcached=False, cache_timeout=0,
     conf.lru_cache = lru_cache
     conf.lru_cache_max = lru_cache_max
     conf.cache_timeout = cache_timeout
+    if memcached or lru_cache:
+        conf.is_cache = True
 
 from .table import Table
 from .models import Model
