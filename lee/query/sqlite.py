@@ -2,6 +2,8 @@ import sqlite3 as sqlite
 from lee import conf
 from lee.logging import logger
 
+import atexit
+
 map_sqlite_types = {
     'str': 'TEXT',
     'int': 'INTEGER',
@@ -37,6 +39,7 @@ def _get_conn(conn=None):
         conn.row_factory = dict_factory
 
         SQLITE_CONN = conn
+        atexit.register(SQLITE_CONN.close)
 
     return conn
 
