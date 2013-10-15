@@ -278,6 +278,8 @@ class Table(object):
                 for ret in _find_all()]
 
     def _del_cache(self, obj):
+        if not obj:
+            return
         obj = obj.copy()
         pri, uniqs = self._gen_cache_keys(obj)
         uniqs.append(pri)
@@ -286,6 +288,8 @@ class Table(object):
             mc.delete(mc_key)
 
     def _cache_set(self, obj):
+        if not obj:
+            return
         obj = obj.copy()
         pri, uniqs = self._gen_cache_keys(obj)
         uniqs.append(pri)
