@@ -106,11 +106,14 @@ def desc_table(table_name, cur):
         if col['Type'].find('unsigned') > -1:
             column['unsigned'] = True
 
-        column['default'] = col['Default']
+        if col['Null'] == 'YES':
+            column['null'] = True
+
+        if col['Default']:
+            column['default'] = col['Default']
+            column['null'] = True
+
         column['name'] = col['Field']
-        column['null'] = True
-        if col['Null'] == 'NO':
-            column['null'] = False
 
         if col['Extra'] == 'auto_increment' or col['Extra'].find('auto_increment') > -1:
             column['auto_increment'] = True
@@ -163,12 +166,29 @@ def diff_table(table_name, columns):
         if old_length:
             old_length = int(old_length)
 
-        old_auto_incr = old_column.get('auto_increment')
-        auto_incr = column.get('auto_increment')
-        old_is_null = old_column.get('null')
-        is_null = column.get('null')
+        old_auto_incr = old_column.get('auto_increment', False)
+        auto_incr = column.get('auto_increment', False)
+        old_is_null = old_column.get('null', False)
+        is_null = column.get('null', False)
+        old_default = column.get('default', None)
+        default = column.get('default', None)
+        if default is not None:
+            is_null = True
+
+        if callable(default):
+            default = None
+            old_default = None
+            old_is_null = True
+
+        if auto_incr:
+            default = None
+            old_default = None
+            is_null = True
+            old_is_null = True
+
+
         if old_length != length or old_auto_incr != auto_incr or \
-                old_is_null != is_null:
+                old_is_null != is_null or default != old_default:
             diff_columns.append(column)
 
         if old_column.get('primary', False) != column.get('primary', False):
