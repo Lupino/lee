@@ -16,6 +16,8 @@ Cache = Table(Cache)
 class Sequence(Model):
     table_name = 'sequence'
 
+    auto_cache = False
+
     columns = [
         {'name': 'name', 'type': 'str', 'primary': True, 'length': 20},
         {'name': 'id',   'type': 'int', 'default': 0}
