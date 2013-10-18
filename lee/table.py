@@ -203,7 +203,7 @@ class Table(object):
                 self._del_cache(old_obj)
                 self._cache_set(new_obj)
 
-            return primarys[0][1]
+            return None
         else:
             for primary in primarys:
                 if primary[1] is not None:
@@ -226,10 +226,7 @@ class Table(object):
 
             cur.execute(sql, args)
 
-            if primarys and list(filter(lambda x: x[1] is not None, primarys)):
-                return primarys[0][1]
-            else:
-                return cur.lastrowid
+            return cur.lastrowid
 
     def find_one(self, query = None, column = '*', order = None, group = None,
             is_or = False):
