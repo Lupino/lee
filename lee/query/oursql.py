@@ -163,8 +163,12 @@ def diff_table(table_name, columns):
         if old_length:
             old_length = int(old_length)
 
-        if old_length != length or \
-                old_column.get('auto_increment') != column.get('auto_increment'):
+        old_auto_incr = old_column.get('auto_increment')
+        auto_incr = column.get('auto_increment')
+        old_is_null = old_column.get('null')
+        is_null = column.get('null')
+        if old_length != length or old_auto_incr != auto_incr or \
+                old_is_null != is_null:
             diff_columns.append(column)
 
         if old_column.get('primary', False) != column.get('primary', False):
