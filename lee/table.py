@@ -82,7 +82,7 @@ class Table(object):
         obj = obj.copy()
         args = [obj[pri] for pri in self._pris]
         mc_key = self._gen_cache_key(args)
-        mc.set(mc_key, obj)
+        mc.set(mc_key, obj, self._model.cache_timeout)
 
     def _cache_del(self, obj):
         if isinstance(obj, (tuple, list)):
