@@ -130,14 +130,14 @@ class Table(object):
                 cur.execute(sql, args)
                 ret = cur.fetchone()
                 if ret:
-                    args = [ret[pri] for pri in self._pris]
-                    self.del_by_id(*args)
-            else:
-                sql = 'DELETE FROM `{}` WHERE `{}` = ?'.format(\
-                        self._model.table_name, column_name)
-                args = (uniq_key, )
-                logger.debug('Query> SQL: {} | ARGS: {}'.format(sql, args))
-                cur.execute(sql, args)
+                    self._cache_del(ret)
+                else:
+                    return
+            sql = 'DELETE FROM `{}` WHERE `{}` = ?'.format(\
+                    self._model.table_name, column_name)
+            args = (uniq_key, )
+            logger.debug('Query> SQL: {} | ARGS: {}'.format(sql, args))
+            cur.execute(sql, args)
         setattr(self, 'del_by_{}'.format(column_name), _gen_uniq_del)
 
     def gen_pris_del(self):
