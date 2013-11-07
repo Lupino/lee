@@ -64,7 +64,6 @@ def parse(obj, columns):
     return obj
 
 def _filter(tp, val, encoding = 'UTF-8'):
-
     if tp == 'int':
         if not isinstance(val, int):
             if re.match('^[0-9-]+$', str(val)):
@@ -81,10 +80,15 @@ def _filter(tp, val, encoding = 'UTF-8'):
 
     elif tp == 'str':
         if not isinstance(val, str):
-            val = str(val, encoding)
+            if isinstance(val, (int, float)):
+                val = str(val)
+            else:
+                val = str(val, encoding)
 
     elif tp == 'bytes':
         if not isinstance(val, bytes):
+            if isinstance(val, (int, float)):
+                val = str(val)
             val = bytes(val, encoding)
     elif tp == 'bool':
         if not use_mysql:
