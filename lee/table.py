@@ -191,7 +191,7 @@ class Table(object):
         if old_obj:
             part = ', '.join(['`{}`= ?'.format(k) for k in use_keys])
             where = ' AND '.join(['`{}` = ?'.format(pri) for pri in self._pris])
-            where = ' WHERE {}' + where
+            where = ' WHERE ' + where
             for pri in self._pris:
                 use_values.append(old_obj[pri])
             if len(use_values) < 2:
