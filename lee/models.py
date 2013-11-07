@@ -1,4 +1,5 @@
 from . import conf
+from .utils import unparse
 
 class Model(dict):
 
@@ -9,6 +10,8 @@ class Model(dict):
     auto_create_table = True
 
     def __init__(self, table, payload = {}):
+        if payload:
+            payload = unparse(payload, self.columns)
         dict.__init__(self, payload)
         self._table = table
         self.cache_timeout = self.cache_timeout or conf.cache_timeout
