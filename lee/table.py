@@ -183,7 +183,7 @@ class Table(object):
                     self._pri_field)
         else:
             for column_name, column_value in uniqs:
-                old_obj = self.find_one((column_name, column_value),
+                old_obj = self.find_one([(column_name, column_value)],
                         self._pri_field)
                 if old_obj:
                     break
