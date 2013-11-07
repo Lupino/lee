@@ -108,9 +108,10 @@ class Table(object):
                 logger.debug('Query> SQL: {} | ARGS: {}'.format(sql, args))
                 cur.execute(sql, args)
                 ret = cur.fetchone()
-                if self._model.auto_cache and conf.is_cache:
-                    self._cache_set(ret)
-                return self._model(self, ret)
+                if ret:
+                    if self._model.auto_cache and conf.is_cache:
+                        self._cache_set(ret)
+                    return self._model(self, ret)
 
             return None
 
