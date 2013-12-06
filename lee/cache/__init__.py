@@ -1,5 +1,7 @@
 from lee import conf
 
+__all__ = ['get', 'set', 'delete', 'incr', 'decr', 'gen_key']
+
 def _dispatch():
     if conf.memcached:
         from . import memcache as mc

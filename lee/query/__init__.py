@@ -1,5 +1,7 @@
 from lee import conf
 
+__all__ = ['query', 'create_table', 'show_tables', 'diff_table', 'desc_table']
+
 def _dispatch():
     if conf.use_mysql:
         from . import oursql as query
@@ -31,3 +33,6 @@ def show_tables(*args, **kwargs):
 
 def diff_table(*args, **kwargs):
     return _dispatch().diff_table(*args, **kwargs)
+
+def desc_table(*args, **kwargs):
+    return _dispatch().desc_table(*args, **kwargs)

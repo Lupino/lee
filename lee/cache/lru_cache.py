@@ -1,5 +1,8 @@
 from _thread import RLock
 from lee import conf
+
+__all__ = ['get', 'set', 'delete', 'incr', 'decr']
+
 _cache = {}
 full = False
 key_list = []

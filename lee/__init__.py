@@ -2,6 +2,8 @@ from . import conf
 import urllib.parse
 import os
 
+__all__ = ['connect', 'Table', 'Model', 'query']
+
 def connect(path, memcached=False, cache_timeout=0,
         lru_cache=False, lru_cache_max=128):
     '''connect to the database

@@ -1,6 +1,8 @@
 from . import conf
 from .utils import unparse
 
+__all__ = ['Model']
+
 class Model(dict):
 
     table_name = 'default'

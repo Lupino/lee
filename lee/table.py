@@ -4,6 +4,8 @@ from . import cache as mc
 from lee.logging import logger
 from lee import conf
 
+__all__ = ['Table']
+
 _query = query
 
 class Table(object):

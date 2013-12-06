@@ -2,6 +2,8 @@ import oursql
 from lee.conf import mysql as _mysql
 from lee.logging import logger
 
+__all__ = ['query', 'create_table', 'show_tables', 'diff_table', 'desc_table']
+
 map_mysql_types = {
     'str': 'VARCHAR',
     'int': 'INT',

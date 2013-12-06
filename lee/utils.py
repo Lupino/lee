@@ -5,6 +5,8 @@ import re
 
 from lee.logging import logger
 
+__all__ = ['unparse', 'parse', 'parse_query']
+
 def unparse(obj, columns):
     for column in columns:
         if obj.get(column['name']) is not None:

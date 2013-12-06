@@ -4,6 +4,8 @@ from lee.logging import logger
 
 import atexit
 
+__all__ = ['query', 'create_table', 'show_tables', 'diff_table', 'desc_table']
+
 map_sqlite_types = {
     'str': 'TEXT',
     'int': 'INTEGER',

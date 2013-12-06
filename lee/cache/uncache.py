@@ -1,3 +1,5 @@
+__all__ = ['get', 'set', 'delete', 'incr', 'decr']
+
 def get(key, *args, **kwargs):
         return None
 
