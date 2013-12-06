@@ -43,6 +43,10 @@ class Table(object):
     def __call__(self, *args, **kwargs):
         return self._model(self, *args, **kwargs)
 
+    def __repr__(self):
+        columns = '\n#. '.join([str(col) for col in self._model.columns])
+        return 'Table[{}] columns: {}'.format(self._model.table_name, columns)
+
     def diff_table(self):
         return diff_table(self._model.table_name, self._model.columns)
 

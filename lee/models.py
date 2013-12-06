@@ -19,6 +19,10 @@ class Model(dict):
         self._table = table
         self.cache_timeout = self.cache_timeout or conf.cache_timeout
 
+    def __repr__(self):
+        columns = '\n#. '.join([str(col) for col in self.columns])
+        return 'Table[{}] columns: \n#. {}'.format(self.table_name, columns)
+
     def save(self):
         return self._table.save(self.copy())
 
