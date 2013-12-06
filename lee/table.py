@@ -3,6 +3,7 @@ from .utils import parse, parse_query
 from . import cache as mc
 from lee.logging import logger
 from lee import conf
+import inspect
 
 __all__ = ['Table']
 
@@ -10,10 +11,14 @@ _query = query
 
 class Table(object):
     TABLES = None
+
+    __slots__ = ['_model', '_pris', '_uniqs', 'defaults', '_pri_field', '_extra']
+
     def __init__(self, model):
         self._model = model
         self._pris = []
         self._uniqs = []
+        self._extra = {}
 
         if Table.TABLES is None:
             Table.TABLES = show_tables()
@@ -27,16 +32,12 @@ class Table(object):
             if column.get('primary'):
                 self._pris.append(column['name'])
             elif column.get('unique'):
-                self.gen_uniq_query(column['name'])
-                self.gen_uniq_del(column['name'])
                 self._uniqs.append(column['name'])
 
             if column.get('default') is not None:
                 self.defaults[column['name']] = column['default']
 
         self._pri_field = ', '.join(['`{}`'.format(pri) for pri in self._pris])
-        self.gen_pris_query()
-        self.gen_pris_del()
 
     def __call__(self, *args, **kwargs):
         return self._model(self, *args, **kwargs)
@@ -45,13 +46,39 @@ class Table(object):
         columns = '\n#. '.join([str(col) for col in self._model.columns])
         return 'Table[{}] columns: {}'.format(self._model.table_name, columns)
 
+    def register(self, key, val):
+        self._extra[key] = val
+
+    def unregister(self, key):
+        return self._extra.pop(key)
+
+    def __getattr__(self, key):
+        column_name = None
+        if key.startswith('del_by_'):
+            column_name = key[7:]
+            if column_name in self._uniqs:
+                return self.del_by_uniq(column_name)
+        elif key.startswith('find_by_'):
+            column_name = key[8:]
+            if column_name in self._uniqs:
+                return self.find_by_uniq(column_name)
+
+        if key in self._extra.keys():
+            return self._extra[key]
+
+        func = getattr(self._model, 'table_{}'.format(key))
+        if inspect.ismethod(func):
+            return func(self)
+
+        raise KeyError('{} not found'.format(key))
+
     def diff_table(self):
         return diff_table(self._model.table_name, self._model.columns)
 
-    def gen_uniq_query(self, column_name):
+    def find_by_uniq(self, column_name, uniq_key=None):
 
         @query()
-        def _gen_uniq_query(uniq_key, cur):
+        def _find_by_uniq(uniq_key, cur):
             if self._model.auto_cache and conf.is_cache:
                 field = self._pri_field
             else:
@@ -70,7 +97,10 @@ class Table(object):
                     return self._model(self, ret)
             return None
 
-        setattr(self, 'find_by_{}'.format(column_name), _gen_uniq_query)
+        if uniq_key:
+            return _find_by_uniq(uniq_key)
+        else:
+            return _find_by_uniq
 
     def _gen_cache_key(self, args):
         cols = []
@@ -98,10 +128,10 @@ class Table(object):
         mc_key = self._gen_cache_key(args)
         mc.delete(mc_key)
 
-    def gen_pris_query(self):
+    def find_by_id(self, *args):
         pri_len = len(self._pris)
         @query()
-        def _gen_pri_query(*args, cur):
+        def _find_by_id(*args, cur):
             if len(args) == pri_len:
                 if self._model.auto_cache and conf.is_cache:
                     ret = self._cache_get(args)
@@ -121,14 +151,11 @@ class Table(object):
 
             return None
 
-        self._find_by_id = _gen_pri_query
+        return _find_by_id(*args)
 
-    def find_by_id(self, *args):
-        return self._find_by_id(*args)
-
-    def gen_uniq_del(self, column_name):
+    def del_by_uniq(self, column_name, uniq_key=None):
         @query(autocommit=True)
-        def _gen_uniq_del(uniq_key, cur):
+        def _del_by_uniq(uniq_key, cur):
             if self._model.auto_cache and conf.is_cache:
                 sql = 'SELECT {} FROM `{}` WHERE `{}` = ?'.format(self._pri_field,
                         self._model.table_name, column_name)
@@ -145,13 +172,16 @@ class Table(object):
             args = (uniq_key, )
             logger.debug('Query> SQL: {} | ARGS: {}'.format(sql, args))
             cur.execute(sql, args)
-        setattr(self, 'del_by_{}'.format(column_name), _gen_uniq_del)
 
-    def gen_pris_del(self):
+        if uniq_key:
+            return _del_by_uniq(uniq_key)
+        else:
+            return _del_by_uniq
+
+    def del_by_id(self, *args):
         pri_len = len(self._pris)
-
         @query(autocommit=True)
-        def _gen_pri_del(*args, cur):
+        def _del_by_id(*args, cur):
             if len(args) == pri_len:
                 if self._model.auto_cache and conf.is_cache:
                     self._cache_del(args)
@@ -162,10 +192,7 @@ class Table(object):
                 logger.debug('Query> SQL: {} | ARGS: {}'.format(sql, args))
                 cur.execute(sql, args)
 
-        self._del_by_id = _gen_pri_del
-
-    def del_by_id(self, *args):
-        self._del_by_id(*args)
+        _del_by_id(*args)
 
     @query(autocommit=True)
     def save(self, obj, cur):
