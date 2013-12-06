@@ -108,7 +108,7 @@ def parse_query(columns, query = None, limit = '', order = None, group= None,
     values = []
     where = []
 
-    re_q = re.compile('^(.+?)_\$(.+?)$')
+    re_q = re.compile('^(.+?)_\$(gt|gte|lt|lte|eq|like|in)$')
     def parse_item(item):
         if len(item) == 3:
             return item
