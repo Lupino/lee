@@ -46,14 +46,14 @@ def _get_conn(conn=None):
     return conn
 
 class query:
-    __slots__ = ['_autocommit', '_keyword']
+    __slots__ = ['autocommit', 'keyword']
     def __init__(self, keyword='cur', autocommit=False):
         '''
             @keyword: default is cur
             @autocommit: if need commit set it True. default is False
         '''
-        self._autocommit = autocommit
-        self._keyword = keyword
+        self.autocommit = autocommit
+        self.keyword = keyword
 
     def __call__(self, fn):
 
@@ -63,9 +63,9 @@ class query:
                 try:
                     conn = _get_conn()
                     cur = conn.cursor()
-                    kws[self._keyword] = cur
+                    kws[self.keyword] = cur
                     ret = fn(*args, **kws)
-                    if self._autocommit:
+                    if self.autocommit:
                         conn.commit()
                     return ret
                 except sqlite.ProgrammingError as e:
