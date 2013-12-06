@@ -10,8 +10,6 @@ _query = query
 
 class Table(object):
     TABLES = None
-    __slots__ = ['_model', '_pris', '_uniqs', 'defaults', '_pri_field',
-            '_find_by_id', '_del_by_id']
     def __init__(self, model):
         self._model = model
         self._pris = []
