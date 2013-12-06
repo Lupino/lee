@@ -10,6 +10,7 @@ def _dispatch():
     return query
 
 class query(object):
+    __slots__ = ['autocommit', 'keyword']
     def __init__(self, keyword='cur', autocommit=False):
         '''
             @keyword: default is cur

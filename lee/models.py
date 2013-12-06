@@ -10,6 +10,7 @@ class Model(dict):
     auto_cache = True
     cache_timeout = 0
     auto_create_table = True
+    __slots__ = ['_table']
 
     def __init__(self, table, payload = {}):
         if payload:

@@ -43,7 +43,7 @@ def _get_conn(conn=None):
     return conn
 
 class query:
-
+    __slots__ = ['autocommit', 'keyword']
     def __init__(self, keyword='cur', autocommit=False):
         '''
             @keyword: default is cur
