@@ -1,4 +1,3 @@
-from . import conf
 from .utils import unparse
 
 __all__ = ['Model']
@@ -17,7 +16,6 @@ class Model(dict):
             payload = unparse(payload, self.columns)
         dict.__init__(self, payload)
         self._table = table
-        self.cache_timeout = self.cache_timeout or conf.cache_timeout
 
     def __repr__(self):
         columns = '\n#. '.join([str(col) for col in self.columns])

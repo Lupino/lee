@@ -118,7 +118,13 @@ class Table(object):
         obj = obj.copy()
         args = [obj[pri] for pri in self._pris]
         mc_key = self._gen_cache_key(args)
-        mc.set(mc_key, obj, self._model.cache_timeout)
+
+        if self._model.cache_timeout > 0:
+            cache_timeout = self._model.cache_timeout
+        else:
+            cache_timeout = conf.cache_timeout
+
+        mc.set(mc_key, obj, cache_timeout)
 
     def _cache_del(self, obj):
         if isinstance(obj, (tuple, list)):
