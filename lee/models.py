@@ -34,6 +34,41 @@ class Model(object):
 
     __getattr__ = __getitem__
 
+    def keys(self):
+        '''D.keys() -> a set-like object providing a view on D's keys'''
+        return self._payload.keys()
+
+    def values(self):
+        '''D.values() -> an object providing a view on D's values'''
+        return self._payload.values()
+
+    def items(self):
+        return self._payload.items()
+
+    def pop(self, key, default=None):
+        '''
+        D.pop(k[,d]) -> v, remove specified key and return the corresponding value.
+        If key is not found, d is returned if given, otherwise KeyError is raised
+        '''
+        return self._payload.pop(key, default)
+
+    def get(self, key, default=None):
+        '''D.get(k[,d]) -> D[k] if k in D, else d.  d defaults to None.'''
+        return self._payload.get(key, default)
+
+    def update(self, item):
+        '''
+        D.update([E, ]**F) -> None.
+        * Update D from dict/iterable E and F.
+        * If E present and has a .keys() method, does:     for k in E: D[k] = E[k]
+        * If E present and lacks .keys() method, does:     for (k, v) in E: D[k] = v
+        * In either case, this is followed by: for k in F: D[k] = F[k]
+        '''
+        for k, v in item.items():
+            if isinstance(v, str):
+                item[k] = v.strip()
+        return self._payload.update(item)
+
     def copy(self):
         return self._payload.copy()
 
