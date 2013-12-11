@@ -104,7 +104,10 @@ def desc_table(table_name, cur):
         right_bracket = col['Type'].find(')')
         if left_bracket > -1:
             column['type'] = col['Type'][:left_bracket].upper()
-            column['length'] = col['Type'][left_bracket+1:right_bracket]
+            length = col['Type'][left_bracket+1:right_bracket]
+            if length.isnumeric():
+                length = int(length)
+            column['length'] = length
         if col['Type'].find('unsigned') > -1:
             column['unsigned'] = True
 
@@ -164,9 +167,6 @@ def diff_table(table_name, columns):
 
             if tp == 'TINYINT':
                 length = 1
-
-        if old_length:
-            old_length = int(old_length)
 
         old_auto_incr = old_column.get('auto_increment', False)
         auto_incr = column.get('auto_increment', False)
