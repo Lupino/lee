@@ -22,4 +22,7 @@ setup(
     package_dir={'lee': 'lee'},
     include_package_data=True,
     install_requires=requires,
+    scripts = [
+        'scripts/lee'
+    ]
 )
