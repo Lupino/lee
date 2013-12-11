@@ -2,7 +2,7 @@ from . import conf
 import urllib.parse
 import os
 
-__all__ = ['connect', 'Table', 'Model', 'query']
+__all__ = ['connect', 'Table', 'Model', 'query', 'desc_table', 'show_tables']
 
 def connect(path, memcached=False, cache_timeout=0,
         lru_cache=False, lru_cache_max=128):
@@ -45,4 +45,4 @@ def connect(path, memcached=False, cache_timeout=0,
 
 from .table import Table
 from .models import Model
-from .query import query
+from .query import query, desc_table, show_tables
