@@ -9,14 +9,14 @@ class Model(object):
     auto_cache = True
     cache_timeout = 0
     auto_create_table = True
-    __slots__ = ['_table', '_payload']
+    __slots__ = ['_table', '__dict__']
 
     def __init__(self, table, payload = {}):
         if payload:
             payload = unparse(payload, self.columns)
 
         self._table = table
-        self._payload = payload
+        self.update(payload)
 
     def __repr__(self):
         columns = '\n#. '.join([str(col) for col in self.columns])
@@ -24,37 +24,35 @@ class Model(object):
 
     def __getitem__(self, key, default=None):
         '''x.__getitem__(y) <==> x[y]'''
-        return self._payload.get(key, default)
+        return self.__dict__.get(key, default)
 
     def __setitem__(self, key, val):
         '''x.__setitem__(i, y) <==> x[i]=y'''
         if isinstance(val, str):
             val = val.strip()
-        self._payload[key] = val
-
-    __getattr__ = __getitem__
+        self.__dict__[key] = val
 
     def keys(self):
         '''D.keys() -> a set-like object providing a view on D's keys'''
-        return self._payload.keys()
+        return self.__dict__.keys()
 
     def values(self):
         '''D.values() -> an object providing a view on D's values'''
-        return self._payload.values()
+        return self.__dict__.values()
 
     def items(self):
-        return self._payload.items()
+        return self.__dict__.items()
 
     def pop(self, key, default=None):
         '''
         D.pop(k[,d]) -> v, remove specified key and return the corresponding value.
         If key is not found, d is returned if given, otherwise KeyError is raised
         '''
-        return self._payload.pop(key, default)
+        return self.__dict__.pop(key, default)
 
     def get(self, key, default=None):
         '''D.get(k[,d]) -> D[k] if k in D, else d.  d defaults to None.'''
-        return self._payload.get(key, default)
+        return self.__dict__.get(key, default)
 
     def update(self, item):
         '''
@@ -67,13 +65,13 @@ class Model(object):
         for k, v in item.items():
             if isinstance(v, str):
                 item[k] = v.strip()
-        return self._payload.update(item)
+        return self.__dict__.update(item)
 
     def copy(self):
-        return self._payload.copy()
+        return self.__dict__.copy()
 
     def save(self):
-        return self._table.save(self._payload.copy())
+        return self._table.save(self.__dict__.copy())
 
     def delete(self):
         pris = list(filter(lambda x: x.get('primary'), self.columns))
