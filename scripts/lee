@@ -2,6 +2,9 @@
 import lee
 import argparse
 
+KEYS = ['name', 'type', 'index', 'primary', 'unique', 'auto_increment',
+    'null', 'unsigned', 'length', 'default']
+
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('-o', '--output', help='the output file')
@@ -21,6 +24,19 @@ class _{class_name}(Model):
 {class_name} = Table(_{class_name})
 '''
 
+def format_column(column):
+    output = []
+    for key in KEYS:
+        val = column.get(key)
+        if val:
+            if isinstance(val, str):
+                val = "'%s'"%val
+            else:
+                val = str(val)
+            output.append("'{}': {}".format(key, val))
+
+    return "{%s}"%', '.join(output)
+
 def main():
     args = parse_args()
     lee.connect(args.path)
@@ -34,7 +50,7 @@ def main():
 
     for table in tables:
         columns = lee.desc_table(table)
-        columns = [str(column) for column in columns]
+        columns = [format_column(column) for column in columns]
         columns = ',\n        '.join(columns)
         output.append(template.format(table_name=table,
             class_name=table.capitalize(),
