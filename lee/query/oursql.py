@@ -108,6 +108,9 @@ def desc_table(table_name, cur):
             if length.isnumeric():
                 length = int(length)
             column['length'] = length
+        else:
+            column['type'] = col['Type'].split(' ')[0]
+
         if col['Type'].find('unsigned') > -1:
             column['unsigned'] = True
 
