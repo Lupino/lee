@@ -5,6 +5,7 @@ import argparse
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('-o', '--output', help='the output file')
+    parser.add_argument('--table', help='the table name')
     parser.add_argument('path', help='sqlite://path/to/the/sqlite\nmysql://host:port?user=dbuser&passwd=dbpasswd&db=dbname')
     args = parser.parse_args()
     return args
@@ -23,7 +24,10 @@ class _{class_name}(Model):
 def main():
     args = parse_args()
     lee.connect(args.path)
-    tables = lee.show_tables()
+    if args.table:
+        tables = [args.table]
+    else:
+        tables = lee.show_tables()
 
     output = []
     output.append('from lee import Table, Model')
