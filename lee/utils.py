@@ -4,11 +4,29 @@ import pickle
 import re
 import logging
 
+__all__ = ['unparse', 'parse', 'parse_query', 'logger', 'to_int', 'to_float',
+    'to_str']
+
 logger = logging.getLogger('lee')
 
-__all__ = ['unparse', 'parse', 'parse_query']
 
 def unparse(obj, columns):
+    '''
+    >>> types = ['int', 'float', 'str', 'bytes', 'bool', 'json', 'pickle']
+    >>> columns = [{'name': 'test_%s'%t, 'type': t} for t in types]
+    >>> obj = {'test_int': '2'}
+    >>> unparse(obj, columns)
+    {'test_int': 2}
+    >>> obj = {'test_int': b'2'}
+    >>> unparse(obj, columns)
+    {'test_int': 2}
+    >>> obj = {'test_int': '2.2'}
+    >>> unparse(obj, columns)
+    {'test_int': 2}
+    >>> obj = {'test_int': 2.2}
+    >>> unparse(obj, columns)
+    {'test_int': 2}
+    '''
     for column in columns:
         if obj.get(column['name']) is not None:
             key = column['name']
@@ -67,41 +85,142 @@ def parse(obj, columns):
     return obj
 
 def _filter(tp, val, encoding = 'UTF-8'):
+    '''
+    >>> types = ['int', 'float', 'str', 'bytes', 'bool']
+    '''
     if tp == 'int':
-        if not isinstance(val, int):
-            if re.match('^[0-9-]+$', str(val)):
-                val = int(val)
-            else:
-                val = None
+        val = to_int(val)
 
     elif tp == 'float':
-        if not isinstance(val, float):
-            if re.match('^[0-9.-]+$', str(val)):
-                val = float(val)
-            else:
-                val = None
+        val = to_float(val)
 
     elif tp == 'str':
-        if not isinstance(val, str):
-            if isinstance(val, (int, float)):
-                val = str(val)
-            else:
-                val = str(val, encoding)
+        val = to_str(val)
 
     elif tp == 'bytes':
         if not isinstance(val, bytes):
-            if isinstance(val, (int, float)):
-                val = str(val)
+            val = to_str(val, encoding)
             val = bytes(val, encoding)
+
     elif tp == 'bool':
-        if not use_mysql:
+        if not conf.use_mysql:
             if isinstance(val, bool):
-                if val:
-                    val = 1
-                else:
-                    val = 0
+                val = to_int(val)
 
     return val
+
+def to_int(val):
+    '''
+    >>> to_int(2)
+    2
+    >>> to_int('2')
+    2
+    >>> to_int(b'2')
+    2
+    >>> to_int(2.2)
+    2
+    >>> to_int(b'2.2')
+    2
+    >>> to_int(b'2.2')
+    2
+    >>> to_int(True)
+    1
+    >>> to_int(False)
+    0
+    >>> to_int(None)
+    Traceback (most recent call last):
+      ...
+    ValueError: invalid: could not convert None to int
+    >>> to_int('a')
+    Traceback (most recent call last):
+      ...
+    ValueError: invalid: could not convert a to int
+    >>> to_int(b'a')
+    Traceback (most recent call last):
+      ...
+    ValueError: invalid: could not convert b'a' to int
+    '''
+    if isinstance(val, (bytes, str)):
+        if val.isdigit():
+            return int(val)
+        if isinstance(val, bytes):
+            if val.count(b'.') == 1:
+                if val.replace(b'.', b'').isdigit():
+                    val = float(val)
+                    return int(val)
+        else:
+            if val.count('.') == 1:
+                if val.replace('.', '').isdigit():
+                    val = float(val)
+                    return int(val)
+    if isinstance(val, (int, float, bool)):
+        return int(val)
+
+    raise ValueError('invalid: could not convert {} to int'.format(val))
+
+def to_float(val):
+    '''
+    >>> to_float(2)
+    2.0
+    >>> to_float('2')
+    2.0
+    >>> to_float(b'2')
+    2.0
+    >>> to_float(2.2)
+    2.2
+    >>> to_float(b'2.2')
+    2.2
+    >>> to_float(b'2.2')
+    2.2
+    >>> to_float(True)
+    1.0
+    >>> to_float(False)
+    0.0
+    >>> to_float(None)
+    Traceback (most recent call last):
+      ...
+    ValueError: invalid: could not convert None to float
+    >>> to_float('a')
+    Traceback (most recent call last):
+      ...
+    ValueError: invalid: could not convert a to float
+    >>> to_float(b'a')
+    Traceback (most recent call last):
+      ...
+    ValueError: invalid: could not convert b'a' to float
+    '''
+    if isinstance(val, (bytes, str)):
+        if val.isdigit():
+            return float(val)
+        if isinstance(val, bytes):
+            if val.count(b'.') == 1:
+                if val.replace(b'.', b'').isdigit():
+                    return float(val)
+        else:
+            if val.count('.') == 1:
+                if val.replace('.', '').isdigit():
+                    return float(val)
+    if isinstance(val, (int, float, bool)):
+        return float(val)
+
+    raise ValueError('invalid: could not convert {} to float'.format(val))
+
+def to_str(val, encoding='UTF-8'):
+    '''
+    >>> to_str(2)
+    '2'
+    >>> to_str(2.2)
+    '2.2'
+    >>> to_str('2.2')
+    '2.2'
+    >>> to_str('str')
+    'str'
+    >>> to_str(b'str')
+    'str'
+    '''
+    if isinstance(val, (bytes, bytearray)):
+        return str(val, encoding)
+    return str(val)
 
 def parse_query(columns, query = None, limit = '', order = None, group= None,
         is_or = False):
@@ -195,3 +314,7 @@ def parse_query(columns, query = None, limit = '', order = None, group= None,
         where.append(limit)
 
     return ' '.join(where), values
+
+if __name__ == '__main__':
+    import doctest
+    doctest.testmod()
