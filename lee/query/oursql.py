@@ -1,6 +1,6 @@
 import oursql
 from lee.conf import mysql as _mysql
-from lee.logging import logger
+from lee.utils import logger
 
 __all__ = ['query', 'create_table', 'show_tables', 'diff_table', 'desc_table']
 

@@ -1,6 +1,6 @@
 import sqlite3 as sqlite
 from lee import conf
-from lee.logging import logger
+from lee.utils import logger
 
 import atexit
 

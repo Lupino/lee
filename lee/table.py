@@ -1,8 +1,8 @@
 from .query import create_table, show_tables, diff_table, query
 from .utils import parse, parse_query
 from . import cache as mc
-from lee.logging import logger
-from lee import conf
+from .utils import logger
+from . import conf
 import inspect
 
 __all__ = ['Table']

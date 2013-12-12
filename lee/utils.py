@@ -1,9 +1,10 @@
-from .conf import use_mysql
+from lee import conf
 import json
 import pickle
 import re
+import logging
 
-from lee.logging import logger
+logger = logging.getLogger('lee')
 
 __all__ = ['unparse', 'parse', 'parse_query']
 
