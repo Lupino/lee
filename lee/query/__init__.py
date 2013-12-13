@@ -26,14 +26,14 @@ class query(object):
 
         return wrapper
 
-def create_table(*args, **kwargs):
-    return _dispatch().create_table(*args, **kwargs)
+def create_table(table_name, columns):
+    return _dispatch().create_table(table_name, columns)
 
-def show_tables(*args, **kwargs):
-    return _dispatch().show_tables(*args, **kwargs)
+def show_tables():
+    return _dispatch().show_tables()
 
-def diff_table(*args, **kwargs):
-    return _dispatch().diff_table(*args, **kwargs)
+def diff_table(table_name, columns):
+    return _dispatch().diff_table(table_name, columns)
 
-def desc_table(*args, **kwargs):
-    return _dispatch().desc_table(*args, **kwargs)
+def desc_table(table_name):
+    return _dispatch().desc_table(table_name)
