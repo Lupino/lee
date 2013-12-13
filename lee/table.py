@@ -10,6 +10,36 @@ __all__ = ['Table']
 _query = query
 
 class Table(object):
+    '''
+    Table.TABLES:
+        all the table on the connection database
+
+    Table.defaults:
+        the default values of columns
+
+    Table.name:
+        the table name
+
+    example::
+
+        class Cache(Model):
+            columns = [
+                {'name': 'cache_id',   'type': 'str', 'primary': True, 'length': 32},
+                {'name': 'value',      'type': 'pickle'},
+                {'name': 'created_at', 'type': 'int', 'unsigned': True, 'default': lambda : int(time())}
+            ]
+            table_name = 'cache'
+
+        Cache = Table(Cache)
+        cache = Cache({'cache_id': 'test', 'value': {'test': 'this is a test'}})
+        cache.save()
+        cache = Cache({'cache_id': 'test1', 'value': {'test': 'this is a test1'}})
+        cache.save()
+        caches = Cache.find_all()
+        print(caches)
+        print(cache.find_by_id('test'))
+        print(cache.del_by_id('test'))
+    '''
     TABLES = None
 
     __slots__ = ['name', '_model', '_pris', '_uniqs', 'defaults', '_pri_field', '_extra']
@@ -48,12 +78,41 @@ class Table(object):
         return 'Table[{}] columns: {}'.format(self._model.table_name, columns)
 
     def register(self, key, val):
+        '''
+        register an extra attribute or function to table.
+
+        eg::
+
+            table.register('get', table.find_by_id)
+            table.get(primary_key)
+
+        '''
         self._extra[key] = val
 
     def unregister(self, key):
+        '''
+        unregister an extra attribute or function to table.
+
+        eg::
+
+            table.register('get', table.find_by_id)
+            table.get(primary_key)
+            table.unregister('get')
+            table.get    # raise
+
+        '''
         return self._extra.pop(key)
 
     def __getattr__(self, key):
+        '''
+        get the magic key:
+            * Table.del_by_*
+            * Table.find_by_*
+            * Model.table_*(classmethod)
+            * Table._extra[key]
+
+        or raise KeyError
+        '''
         column_name = None
         if key.startswith('del_by_'):
             column_name = key[7:]
@@ -74,10 +133,14 @@ class Table(object):
         raise KeyError('{} not found'.format(key))
 
     def diff_table(self):
+        '''
+        compare the model table and the database table, and show the recommand
+        ALERT TABLE SQL
+        '''
         return diff_table(self._model.table_name, self._model.columns)
 
     def find_by_uniq(self, column_name, uniq_key=None):
-
+        '''find by uniq key difine on the model column'''
         @query()
         def _find_by_uniq(uniq_key, cur):
             if self._model.auto_cache and conf.is_cache:
@@ -136,6 +199,7 @@ class Table(object):
         mc.delete(mc_key)
 
     def find_by_id(self, *args):
+        '''find by primary key difine on the model column'''
         pri_len = len(self._pris)
         @query()
         def _find_by_id(*args, cur):
@@ -161,6 +225,7 @@ class Table(object):
         return _find_by_id(*args)
 
     def del_by_uniq(self, column_name, uniq_key=None):
+        '''del by uniq key difine on the model column'''
         @query(autocommit=True)
         def _del_by_uniq(uniq_key, cur):
             if self._model.auto_cache and conf.is_cache:
@@ -186,6 +251,7 @@ class Table(object):
             return _del_by_uniq
 
     def del_by_id(self, *args):
+        '''del by primary key difine on the model column'''
         pri_len = len(self._pris)
         @query(autocommit=True)
         def _del_by_id(*args, cur):
@@ -202,6 +268,10 @@ class Table(object):
         _del_by_id(*args)
 
     def save(self, obj):
+        '''
+        save the obj to database, if has one update it, otherwise create it,
+        dect by primary key or unique key
+        '''
 
         @query(autocommit=True)
         def _save(sql, args, cur):
@@ -275,6 +345,8 @@ class Table(object):
     def find_one(self, query = None, column = '*', order = None, group = None,
             is_or = False):
 
+        '''find one by query, also see lee.utils.parse_query'''
+
         where, values = parse_query(self._model.columns, query, 1, order, group, is_or)
 
         @_query()
@@ -295,6 +367,8 @@ class Table(object):
 
     def find_all(self, query = None, column = '*', limit = '', order = None,
             group = None, is_or = False, page = None):
+
+        '''find all by query, also see lee.utils.parse_query'''
 
         if limit and page:
             start = int(limit) * int(page)
@@ -318,6 +392,8 @@ class Table(object):
 
     def del_all(self, query = None, limit = '', order = None, group = None,
             is_or = False):
+
+        '''delete all by query, also see lee.utils.parse_query'''
 
         if self._model.auto_cache and conf.is_cache:
             old_objs = self.find_all(query, self._pri_field, limit, order, group, is_or)
