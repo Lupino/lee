@@ -17,15 +17,8 @@ def unparse(obj, columns):
     >>> obj = {'test_int': '2'}
     >>> unparse(obj, columns)
     {'test_int': 2}
-    >>> obj = {'test_int': b'2'}
-    >>> unparse(obj, columns)
-    {'test_int': 2}
-    >>> obj = {'test_int': '2.2'}
-    >>> unparse(obj, columns)
-    {'test_int': 2}
-    >>> obj = {'test_int': 2.2}
-    >>> unparse(obj, columns)
-    {'test_int': 2}
+    >>> unparse({'test_int': b'2', 'test_json': '{"key": "val"}'}, columns)
+    {'test_json': {'key': 'val'}, 'test_int': 2}
     '''
     for column in columns:
         if obj.get(column['name']) is not None:
@@ -56,6 +49,15 @@ def unparse(obj, columns):
     return obj
 
 def parse(obj, columns):
+    '''
+    >>> types = ['int', 'float', 'str', 'bytes', 'bool', 'json', 'pickle']
+    >>> columns = [{'name': 'test_%s'%t, 'type': t} for t in types]
+    >>> obj = {'test_int': '2'}
+    >>> parse(obj, columns)
+    {'test_int': 2}
+    >>> parse({'test_int': b'2', 'test_json': {"key": "val"}}, columns)
+    {'test_json': '{"key": "val"}', 'test_int': 2}
+    '''
     for column in columns:
         if obj.get(column['name']) is not None:
             key = column['name']
@@ -222,8 +224,54 @@ def to_str(val, encoding='UTF-8'):
         return str(val, encoding)
     return str(val)
 
-def parse_query(columns, query = None, limit = '', order = None, group= None,
+def parse_query(columns, query = None, limit = '', order = None, group = None,
         is_or = False):
+    '''
+    >>> types = ['int', 'float', 'str', 'bytes', 'bool', 'json', 'pickle']
+    >>> columns = [{'name': 'test_%s'%t, 'type': t} for t in types]
+
+    >>> query = {
+    ...     'test_int': 2,
+    ...     'test_str': 'this is a string',
+    ...     'test_bytes': 'this is a bytes',
+    ...     'test_json': {'key': 'val'},
+    ... }
+    ...
+    >>> parse_query(columns, query)
+    ('WHERE `test_int` = ? AND `test_str` = ? AND `test_bytes` = ? AND `test_json` = ?', [2, 'this is a string', b'this is a bytes', '{"key": "val"}'])
+
+    >>> for op in 'gt|gte|lt|lte|eq|like'.split('|'):
+    ...     out = parse_query(columns, {'test_int_$%s'%op: 2})
+    ...     print("parse_query(columns, {'test_int_$%s': 2}) -> %s"%(op, out))
+    ...
+    parse_query(columns, {'test_int_$gt': 2}) -> ('WHERE `test_int` > ?', [2])
+    parse_query(columns, {'test_int_$gte': 2}) -> ('WHERE `test_int` >= ?', [2])
+    parse_query(columns, {'test_int_$lt': 2}) -> ('WHERE `test_int` < ?', [2])
+    parse_query(columns, {'test_int_$lte': 2}) -> ('WHERE `test_int` <= ?', [2])
+    parse_query(columns, {'test_int_$eq': 2}) -> ('WHERE `test_int` = ?', [2])
+    parse_query(columns, {'test_int_$like': 2}) -> ('WHERE `test_int` LIKE "2"', [])
+
+    >>> parse_query(columns, {'test_int_$in': [1, 2, 3]})
+    ('WHERE `test_int` IN (?, ?, ?)', [1, 2, 3])
+
+    >>> parse_query(columns, {'test_int': 1}, limit='1')
+    ('WHERE `test_int` = ? LIMIT 1', [1])
+
+    >>> parse_query(columns, [('test_str', 'str'), ('test_int', 1)])
+    ('WHERE `test_int` = ? AND `test_str` = ?', [1, 'str'])
+
+    >>> parse_query(columns, {'test_int': 1}, limit='1, 2')
+    ('WHERE `test_int` = ? LIMIT 1, 2', [1])
+
+    >>> parse_query(columns, {'test_int': 1}, order = 'test_int')
+    ('WHERE `test_int` = ? ORDER BY `test_int`', [1])
+
+    >>> parse_query(columns, {'test_int': 1}, order = {'test_int': 'ASC'})
+    ('WHERE `test_int` = ? ORDER BY `test_int` ASC', [1])
+
+    >>> parse_query(columns, {'test_int': 1}, group = ['test_int'])
+    ('WHERE `test_int` = ? GROUP BY `test_int`', [1])
+    '''
     keys = []
     values = []
     where = []
