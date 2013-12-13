@@ -7,13 +7,22 @@ __all__ = ['connect', 'Table', 'Model', 'query', 'desc_table', 'show_tables']
 def connect(path, memcached=False, cache_timeout=0,
         lru_cache=False, lru_cache_max=128):
     '''connect to the database
+
     @path:
-        sqlite://path/to/the/sqlite
-        mysql://host:port?user=dbuser&passwd=dbpasswd&db=dbname
-    @memcached: the host list of memcached list
-    @cache_timeout: only for memcached timeout
-    @lru_cache: bool if use lru_cache set it True
-    @lru_cache_max: the max size of lru_cache
+        * sqlite://path/to/the/sqlite
+        * mysql://host:port?user=dbuser&passwd=dbpasswd&db=dbname
+
+    @memcached:
+        the host list of memcached list
+
+    @cache_timeout:
+        only for memcached timeout
+
+    @lru_cache:
+        bool if use lru_cache set it True
+
+    @lru_cache_max:
+        the max size of lru_cache
     '''
     p = urllib.parse.urlparse(path)
     if p.scheme == 'mysql':
