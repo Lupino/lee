@@ -12,13 +12,14 @@ _query = query
 class Table(object):
     TABLES = None
 
-    __slots__ = ['_model', '_pris', '_uniqs', 'defaults', '_pri_field', '_extra']
+    __slots__ = ['name', '_model', '_pris', '_uniqs', 'defaults', '_pri_field', '_extra']
 
     def __init__(self, model):
         self._model = model
         self._pris = []
         self._uniqs = []
         self._extra = {}
+        self.name = model.table_name
 
         if Table.TABLES is None:
             Table.TABLES = show_tables()
@@ -200,8 +201,14 @@ class Table(object):
 
         _del_by_id(*args)
 
-    @query(autocommit=True)
-    def save(self, obj, cur):
+    def save(self, obj):
+
+        @query(autocommit=True)
+        def _save(sql, args, cur):
+            logger.debug('Query> SQL: {} | ARGS: {}'.format(sql, args))
+            cur.execute(sql, args)
+            return cur.lastrowid
+
         obj = parse(obj, self._model.columns)
 
         pris = [obj[pri] for pri in self._pris if pri in obj]
@@ -239,8 +246,7 @@ class Table(object):
 
             sql = 'UPDATE `{}` SET {} {}'.format(self._model.table_name, part, where)
             args = tuple(use_values)
-            logger.debug('Query> SQL: {} | ARGS: {}'.format(sql, args))
-            cur.execute(sql, args)
+            _save(sql, args)
             if self._model.auto_cache and conf.is_cache:
                 self._cache_del(old_obj)
 
@@ -263,11 +269,8 @@ class Table(object):
 
             sql = 'INSERT INTO `{}` ({}) VALUES ({})'.format(self._model.table_name, part_k, part_v)
             args = tuple(use_values)
-            logger.debug('Query> SQL: {} | ARGS: {}'.format(sql, args))
 
-            cur.execute(sql, args)
-
-            return cur.lastrowid
+            return _save(sql, args)
 
     def find_one(self, query = None, column = '*', order = None, group = None,
             is_or = False):
