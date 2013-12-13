@@ -260,6 +260,9 @@ def parse_query(columns, query = None, limit = '', order = None, group = None,
     >>> parse_query(columns, [('test_str', 'str'), ('test_int', 1)])
     ('WHERE `test_int` = ? AND `test_str` = ?', [1, 'str'])
 
+    >>> parse_query(columns, [('test_str', 'str'), ('test_int', 1)], is_or=True)
+    ('WHERE `test_int` = ? OR `test_str` = ?', [1, 'str'])
+
     >>> parse_query(columns, {'test_int': 1}, limit='1, 2')
     ('WHERE `test_int` = ? LIMIT 1, 2', [1])
 
