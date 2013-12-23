@@ -43,8 +43,12 @@ def unparse(obj, columns):
                     obj[key] = None
 
             else:
-                obj[key] = _filter(tp, value,
-                        column.get('encoding', 'UTF-8'))
+                try:
+                    obj[key] = _filter(tp, value,
+                            column.get('encoding', 'UTF-8'))
+                except Exception as e:
+                    logger.exception(e)
+                    obj[key] = None
 
     return obj
 
@@ -81,8 +85,12 @@ def parse(obj, columns):
                     obj[key] = None
 
             else:
-                obj[key] = _filter(tp, value,
-                        column.get('encoding', 'UTF-8'))
+                try:
+                    obj[key] = _filter(tp, value,
+                            column.get('encoding', 'UTF-8'))
+                except Exception as e:
+                    logger.exception(e)
+                    obj[key] = None
 
     return obj
 
