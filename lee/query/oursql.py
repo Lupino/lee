@@ -139,7 +139,7 @@ def desc_table(table_name, cur):
 
     return columns
 
-def diff_table(table_name, columns):
+def diff_table(table_name, columns, spec_index, spec_uniq):
     '''
     diff the column change
     '''
