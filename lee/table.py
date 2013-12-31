@@ -56,7 +56,7 @@ class Table(object):
 
         if model.auto_create_table and model.table_name not in Table.TABLES:
             Table.TABLES.append(model.table_name)
-            create_table(model.table_name, model.columns, model.spec_index, model.spec_uniq)
+            create_table(model.table_name, model.columns)
 
         self.defaults = {}
         for column in model.columns:
@@ -137,7 +137,7 @@ class Table(object):
         compare the model table and the database table, and show the recommand
         ALERT TABLE SQL
         '''
-        return diff_table(self._model.table_name, self._model.columns, self._model.spec_index, self._model.spec_uniq)
+        return diff_table(self._model.table_name, self._model.columns)
 
     def find_by_uniq(self, column_name, uniq_key=None):
         '''find by uniq key difine on the model column'''

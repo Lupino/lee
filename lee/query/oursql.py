@@ -1,7 +1,6 @@
 import oursql
 from lee.conf import mysql as _mysql
 from lee.utils import logger
-import re
 
 __all__ = ['query', 'create_table', 'show_tables', 'diff_table', 'desc_table']
 
@@ -16,10 +15,6 @@ map_mysql_types = {
     'text': 'TEXT',
     'float': 'FLOAT'
 }
-
-RE_UNIQUE = re.compile('UNIQUE KEY `(?[^`]+)` \(([^\)]+)\)', re.I)
-RE_INDEX = re.compile('KEY `(?[^`]+)` \(([^\)]+)\)', re.I)
-RE_COLUMN = re.compile('`([^`]+)`')
 
 MYSQL_CONN=None
 def _get_conn(conn=None):
@@ -144,37 +139,7 @@ def desc_table(table_name, cur):
 
     return columns
 
-@query()
-def desc_spec(table_name, cur):
-    cur.execute('show create table `{}`'.format(table_name))
-    col = cur.fetchone()
-    sql = col['Create Table']
-    uniqs = {}
-    for uniq in  RE_UNIQUE.findall(sql):
-        if uniq[1].find(',') > -1:
-            uniqs[uniq[0]] = uniq[2]
-    indexs = {}
-    for index in  RE_INDEX.findall(sql):
-        if index[1].find(',') > -1:
-            if index[0] not in uniqs.keys():
-                indexs[index[0]] = index[2]
-
-    spec_uniq = []
-    for uniq in uniqs.keys():
-        column_names = RE_COLUMN.findall(uniqs[uniq])
-        column_names.insert(0, uniq)
-        spec_uniq.append(column_names)
-
-    spec_index = []
-    for index in indexs.keys():
-        column_names = RE_COLUMN.findall(indexs[index])
-        column_names.insert(0, index)
-        spec_index.append(column_names)
-
-    return tuple(spec_index), tuple(spec_uniq)
-
-
-def diff_table(table_name, columns, spec_index, spec_uniq):
+def diff_table(table_name, columns):
     '''
     diff the column change
     '''
@@ -272,70 +237,6 @@ def diff_table(table_name, columns, spec_index, spec_uniq):
                 sql.append('ALTER TABLE `{}` DROP INDEX `{}`'.format(table_name, column['name']))
             else:
                 sql.append('ALTER TABLE `{}` ADD  INDEX `{}` (`{}`)'.format(table_name, column['name'], column['name']))
-
-    old_spec_index, old_spec_uniq = desc_spec(table_name)
-
-    old_dict_uniq = dict(map(lambda x: (x[0], x), old_spec_uniq))
-    dict_uniq = list(map(lambda x: (x[0], x), spec_uniq))
-    uniq_exists = []
-    uniq_noexists = []
-    for name in dict_uniq.keys():
-        if name in old_dict_uniq.keys():
-            uniq_exists.append(name)
-        else:
-            uniq_noexists.append(name)
-
-    del_uniq = []
-    new_uniq = []
-    for name in old_dict_uniq.keys():
-        old_uniq = old_dict_uniq[name]
-        if name in uniq_exists:
-            uniq = dict_uniq[name]
-            if tuple(old_uniq) != tuple(uniq):
-                del_uniq.append(old_uniq)
-                new_uniq.append(uniq)
-        else:
-            del_uniq.append(old_uniq)
-
-    for name in uniq_noexists:
-        new_uniq.append(dict_uniq[name])
-
-    for uniq in del_uniq:
-        sql.append('ALTER TABLE `{}` DROP INDEX `{}`'.format(table_name, uniq[0]))
-
-    for uniq in new_uniq:
-        sql.append('ALTER TABLE `{}` ADD UNIQUE INDEX `{}` (`{}`)'.format(table_name, uniq[0], '`, `'.join(uniq[1:])))
-
-    old_dict_index = dict(map(lambda x: (x[0], x), old_spec_index))
-    dict_index = list(map(lambda x: (x[0], x), spec_index))
-    index_exists = []
-    index_noexists = []
-    for name in dict_index.keys():
-        if name in old_dict_index.keys():
-            index_exists.append(name)
-        else:
-            index_noexists.append(name)
-
-    del_index = []
-    new_index = []
-    for name in old_dict_index.keys():
-        old_index = old_dict_index[name]
-        if name in index_exists:
-            index = dict_index[name]
-            if tuple(old_index) != tuple(index):
-                del_index.append(old_index)
-                new_index.append(index)
-        else:
-            del_index.append(old_index)
-
-    for name in index_noexists:
-        new_index.append(dict_index[name])
-
-    for index in del_index:
-        sql.append('ALTER TABLE `{}` DROP INDEX `{}`'.format(table_name, index[0]))
-
-    for index in new_index:
-        sql.append('ALTER TABLE `{}` ADD INDEX `{}` (`{}`)'.format(table_name, index[0], '`, `'.join(index[1:])))
 
     return sql
 
