@@ -309,14 +309,18 @@ def gen_create_table_sql(table_name, columns, spec_index, spec_uniq):
     uniqs = list(map(lambda x: '`{}`'.format(x['name']), uniqs))
     index = list(map(lambda x: '`{}`'.format(x['name']), index))
     column_sql.append('PRIMARY KEY ({})'.format(', '.join(primarys)))
+    spec_uniq_names = list(map(lambda x: x[1], spec_uniq))
+    spec_index_names = list(map(lambda x: x[1], spec_index))
     for uniq in uniqs:
-        column_sql.append('UNIQUE KEY {} ({})'.format(uniq, uniq))
+        if uniq[1:-1] not in spec_uniq_names:
+            column_sql.append('UNIQUE KEY {} ({})'.format(uniq, uniq))
 
     for uniq in spec_uniq:
         column_sql.append('UNIQUE KEY `{}` (`{}`)'.format(uniq[0], '`, `'.join(uniq[1:])))
 
     for idx in index:
-        column_sql.append('KEY {} ({})'.format(idx, idx))
+        if idx[1:-1] not in spec_index_names:
+            column_sql.append('KEY {} ({})'.format(idx, idx))
 
     for idx in spec_index:
         column_sql.append('KEY `{}` (`{}`)'.format(idx[0], '`, `'.join(idx[1:])))
