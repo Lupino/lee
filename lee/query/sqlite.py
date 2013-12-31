@@ -128,7 +128,7 @@ def desc_table(table_name, cur):
             columns[column['name']].update(column)
     return list(columns.values())
 
-def diff_table(table_name, columns):
+def diff_table(table_name, columns, spec_index, spec_uniq):
     '''
     only diff the column change unsupport index
     '''
