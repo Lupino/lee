@@ -175,7 +175,7 @@ def gen_opts(column):
 
     return retval
 
-def gen_create_table_sql(table_name, columns):
+def gen_create_table_sql(table_name, columns, spec_index, spec_uniq):
     primarys = []
     column_sql = []
     index = []
@@ -221,10 +221,20 @@ def gen_create_table_sql(table_name, columns):
                 ' {0}_{1}_index on `{0}`(`{1}`)'.format(\
                     table_name, column['name']))
 
+    for uniq in spec_uniq:
+        sql.append('create index if not exists' + \
+                ' {0}_{1}_unique_index on `{0}`(`{2}`)'.format(\
+                table_name, uniq[0], '`, `'.join(uniq[1:])))
+
+    for idx in spec_index:
+        sql.append('create index if not exists' + \
+                ' {0}_{1}_index on `{0}`(`{2}`)'.format(\
+                table_name, idx[0], '`, `'.join(idx[1:])))
+
     return sql
 
 @query(autocommit=True)
-def create_table(table_name, columns, cur):
-    for sql in gen_create_table_sql(table_name, columns):
+def create_table(table_name, columns, spec_index, spec_uniq, cur):
+    for sql in gen_create_table_sql(table_name, columns, spec_index, spec_uniq):
         logger.debug('Query> SQL: {}'.format(sql))
         cur.execute(sql)

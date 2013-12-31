@@ -290,7 +290,7 @@ def gen_opts(column):
 
     return retval
 
-def gen_create_table_sql(table_name, columns):
+def gen_create_table_sql(table_name, columns, spec_index, spec_uniq):
     primarys = []
     uniqs = []
     index = []
@@ -308,19 +308,24 @@ def gen_create_table_sql(table_name, columns):
     primarys = list(map(lambda x: '`{}`'.format(x['name']), primarys))
     uniqs = list(map(lambda x: '`{}`'.format(x['name']), uniqs))
     index = list(map(lambda x: '`{}`'.format(x['name']), index))
-    column_sql.append('PRIMARY KEY ({})'.format(', '.join(primarys)))
+    column_sql.append('PRIMARY KEY (`{}`)'.format(', '.join(primarys)))
     for uniq in uniqs:
-        column_sql.append('UNIQUE KEY {} ({})'.format(uniq, uniq))
+        column_sql.append('UNIQUE KEY `{}` (`{}`)'.format(uniq, uniq))
+
+    for uniq in spec_uniq:
+        column_sql.append('UNIQUE KEY `{}` (`{}`)'.format(uniq[0], '`, `'.join(uniq[1:])))
 
     for idx in index:
-        column_sql.append('KEY {} ({})'.format(idx, idx))
+        column_sql.append('KEY `{}` (`{}`)'.format(idx, idx))
 
+    for idx in spec_index:
+        column_sql.append('KEY `{}` (`{}`)'.format(idx[0], '`, `'.join(idx[1:])))
 
     return 'CREATE TABLE IF NOT EXISTS `{}` ({})'.format(\
             table_name, ', '.join(column_sql)) +\
             ' ENGINE=InnoDB DEFAULT CHARSET=utf8;'
 @query(autocommit=True)
-def create_table(table_name, columns, cur):
-    sql = gen_create_table_sql(table_name, columns)
+def create_table(table_name, columns, spec_index, spec_uniq, cur):
+    sql = gen_create_table_sql(table_name, columns, spec_index, spec_uniq)
     logger.debug('Query> SQL: {}'.format(sql))
     cur.execute(sql)

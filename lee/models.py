@@ -9,6 +9,8 @@ class Model(object):
     auto_cache = True
     cache_timeout = 0
     auto_create_table = True
+    spec_index = ()
+    spec_uniq = ()
     __slots__ = ['_table', '__dict__']
 
     def __init__(self, table, payload = {}):

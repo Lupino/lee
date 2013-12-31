@@ -26,14 +26,14 @@ class query(object):
 
         return wrapper
 
-def create_table(table_name, columns):
-    return _dispatch().create_table(table_name, columns)
+def create_table(table_name, columns, spec_index=(), spec_uniq=()):
+    return _dispatch().create_table(table_name, columns, spec_index, spec_uniq)
 
 def show_tables():
     return _dispatch().show_tables()
 
-def diff_table(table_name, columns):
-    return _dispatch().diff_table(table_name, columns)
+def diff_table(table_name, columns, spec_index=(), spec_uniq=()):
+    return _dispatch().diff_table(table_name, columns, spec_index, spec_uniq)
 
 def desc_table(table_name):
     return _dispatch().desc_table(table_name)
