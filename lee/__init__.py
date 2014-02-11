@@ -42,7 +42,7 @@ def connect(path, memcached=False, cache_timeout=0,
         conf.path = p.netloc + p.path
         conf.use_mysql = False
         base_path = os.path.dirname(conf.path)
-        if not os.path.exists(base_path):
+        if base_path and not os.path.exists(base_path):
             os.makedirs(base_path)
 
     conf.memcached = memcached
