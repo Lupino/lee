@@ -31,11 +31,11 @@ def _get_conn(conn=None):
 
     if conn is None:
         conn = oursql.connect(
-                    host = _mysql['host'],
-                    port = _mysql['port'],
-                    db = _mysql['db'],
-                    user = _mysql['user'],
-                    passwd = _mysql['passwd'],
+                    host = _mysql.get('host', 'localhost'),
+                    port = _mysql.get('port', 3306),
+                    db = _mysql.get('db'),
+                    user = _mysql.get('user'),
+                    passwd = _mysql.get('passwd'),
                     default_cursor = oursql.DictCursor,
                     use_unicode = True
                 )
