@@ -1,5 +1,6 @@
 from _thread import RLock
 from lee import conf
+from lee.utils import to_int
 
 __all__ = ['get', 'set', 'delete', 'incr', 'decr']
 
@@ -44,7 +45,7 @@ def delete(key, *args, **kwargs):
 def incr(key, *args, **kwargs):
     global _cache, full, key_list, lock
     with lock:
-        val = _cache.get(key, 0)
+        val = to_int(_cache.get(key, 0))
         val += 1
         if key in key_list:
             _cache[key] = val
@@ -65,7 +66,7 @@ def incr(key, *args, **kwargs):
 def decr(key, *args, **kwargs):
     global _cache, full, key_list, lock
     with lock:
-        val = _cache.get(key, 0)
+        val = to_int(_cache.get(key, 0))
         val -= 1
         if key in key_list:
             _cache[key] = val
