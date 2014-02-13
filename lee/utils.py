@@ -353,18 +353,21 @@ def parse_query(columns, query = None, limit = '', order = None, group = None,
 
     if order:
         if type(order) == dict:
-            _order = ['ORDER BY `{}` {}'.format(key, val) \
+            _order = ['`{}` {}'.format(key, val) \
                     for key, val in order.items()]
         elif type(order) == list:
-            _order = ['ORDER BY `{}`'.format(key) for key in order]
+            if isinstance(order[0], (list, tuple)):
+                _order = ['`{}` {}'.format(key, val) for key, val in order]
+            else:
+                _order = ['`{}`'.format(key) for key in order]
         else:
-            _order = ['ORDER BY `{}`'.format(order)]
+            _order = ['`{}`'.format(order)]
 
-        where.extend(_order)
+        where.append('ORDER BY {}'.format(', '.join(_order)))
 
     if group:
-        _group = ['GROUP BY `{}`'.format(key) for key in group]
-        where.extend(_group)
+        _group = ['`{}`'.format(key) for key in group]
+        where.append('GROUP BY {}'.format(', '.join(_group)))
 
     if limit:
         limit = str(limit)
