@@ -333,9 +333,16 @@ class Table(object):
                     if callable(val):
                         val = val()
                     use_values.append(val)
+                    obj[key] = val
 
             part_k = ', '.join(['`{}`'.format(k) for k in use_keys])
             part_v = ', '.join(['?' for k in use_keys])
+
+            required_columns = [column['name'] for column in self._model.columns if column.get('required')]
+
+            for column_name in required_columns:
+                if obj.get(column_name) is None:
+                    raise Exception("{} {} is required.".format(self._model.table_name, column_name, ))
 
             sql = 'INSERT INTO `{}` ({}) VALUES ({})'.format(self._model.table_name, part_k, part_v)
             args = tuple(use_values)
