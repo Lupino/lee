@@ -262,6 +262,9 @@ def parse_query(columns, query = None, limit = '', order = None, group = None,
     >>> parse_query(columns, {'test_int_$in': [1, 2, 3]})
     ('WHERE `test_int` IN (?, ?, ?)', [1, 2, 3])
 
+    >>> parse_query(columns, {'test_int_$notin': [1, 2, 3]})
+    ('WHERE `test_int` NOT IN (?, ?, ?)', [1, 2, 3])
+
     >>> parse_query(columns, {'test_int': 1}, limit='1')
     ('WHERE `test_int` = ? LIMIT 1', [1])
 
@@ -287,7 +290,7 @@ def parse_query(columns, query = None, limit = '', order = None, group = None,
     values = []
     where = []
 
-    re_q = re.compile('^(.+?)_\$(gt|gte|lt|lte|eq|like|in)$')
+    re_q = re.compile('^(.+?)_\$(gt|gte|lt|lte|eq|like|in|notin)$')
     def parse_item(item):
         if len(item) == 3:
             return item
@@ -313,6 +316,8 @@ def parse_query(columns, query = None, limit = '', order = None, group = None,
                 op = 'like'
             elif s_op == 'in':
                 op = 'in'
+            elif s_op == 'notin':
+                op = 'notin'
 
         return key, op, val
 
@@ -336,6 +341,11 @@ def parse_query(columns, query = None, limit = '', order = None, group = None,
             elif op == 'in':
                 if len(val) > 0:
                     op = keys.append('`{}` IN ({})'.format(key, ', '.join(['?'] * len(val))))
+                    for v in val:
+                        values.append(v)
+            elif op == 'notin':
+                if len(val) > 0:
+                    op = keys.append('`{}` NOT IN ({})'.format(key, ', '.join(['?'] * len(val))))
                     for v in val:
                         values.append(v)
             else:
