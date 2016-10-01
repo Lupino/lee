@@ -222,21 +222,21 @@ def diff_table(table_name, columns, spec_index, spec_uniq):
     for old_column, column in diff_index_columns:
         if old_column.get('primary') != column.get('primary'):
             if old_column.get('primary'):
-                sql.append('ALTER TABLE `{}` DROP PRIMARY KEY'.format(table_name))
+                sql.append('ALTER TABLE `{}` DROP PRIMARY KEY;'.format(table_name))
             else:
-                sql.append('ALTER TABLE `{}` ADD PRIMARY KEY (`{}`)'.format(table_name, column['name']))
+                sql.append('ALTER TABLE `{}` ADD PRIMARY KEY (`{}`);'.format(table_name, column['name']))
 
         elif old_column.get('unique') != column.get('unique'):
             if old_column.get('unique'):
-                sql.append('ALTER TABLE `{}` DROP INDEX `{}`'.format(table_name, column['name']))
+                sql.append('ALTER TABLE `{}` DROP INDEX `{}`;'.format(table_name, column['name']))
             else:
-                sql.append('ALTER TABLE `{}` ADD  UNIQUE INDEX `{}` (`{}`)'.format(table_name, column['name'], column['name']))
+                sql.append('ALTER TABLE `{}` ADD  UNIQUE INDEX `{}` (`{}`);'.format(table_name, column['name'], column['name']))
 
         else:
             if old_column.get('index'):
-                sql.append('ALTER TABLE `{}` DROP INDEX `{}`'.format(table_name, column['name']))
+                sql.append('ALTER TABLE `{}` DROP INDEX `{}`;'.format(table_name, column['name']))
             else:
-                sql.append('ALTER TABLE `{}` ADD  INDEX `{}` (`{}`)'.format(table_name, column['name'], column['name']))
+                sql.append('ALTER TABLE `{}` ADD  INDEX `{}` (`{}`);'.format(table_name, column['name'], column['name']))
 
     return sql
 
