@@ -349,6 +349,50 @@ class Table(object):
 
             return _save(sql, args)
 
+    def strict_save(self, obj, changed):
+        '''
+        update obj changed to database dect by primary key
+        '''
+        @query(autocommit=True)
+        def _strict_save(sql, args, cur):
+            logger.debug('Query> SQL: {} | ARGS: {}'.format(sql, args))
+            cur.execute(sql, args)
+
+        changed = parse(changed, self._model.columns)
+
+        pris = [obj[pri] for pri in self._pris if pri in obj]
+
+        if not pris:
+            logger.error('UPDATE {}'.format(str(changed)))
+            return None
+
+        use_keys = []
+        use_values = []
+        for column in self._model.columns:
+            if not column.get('primary'):
+                column_name = column['name']
+                column_value = changed.get(column_name)
+                if column_value is not None:
+                    use_keys.append(column_name)
+                    use_values.append(column_value)
+
+        part = ', '.join(['`{}`= ?'.format(k) for k in use_keys])
+        where = ' AND '.join(['`{}` = ?'.format(pri) for pri in self._pris])
+        where = ' WHERE ' + where
+        for pri in self._pris:
+            use_values.append(obj[pri])
+        if len(use_values) < 2:
+            logger.error('UPDATE {}'.format(str(changed)))
+            return None
+
+        sql = 'UPDATE `{}` SET {} {}'.format(self._model.table_name, part, where)
+        args = tuple(use_values)
+        _strict_save(sql, args)
+        if self._model.auto_cache and conf.is_cache:
+            self._cache_del(obj)
+
+        return None
+
     def find_one(self, query = None, column = '*', order = None, group = None,
             is_or = False):
 

@@ -11,13 +11,14 @@ class Model(object):
     auto_create_table = True
     spec_index = ()
     spec_uniq = ()
-    __slots__ = ['_table', '__dict__']
+    __slots__ = ['_table', '__dict__', '_changed']
 
     def __init__(self, table, payload = {}):
         if payload:
             payload = unparse(payload, self.columns)
 
         self._table = table
+        self._changed = {}
         self.update(payload)
 
     def __repr__(self):
@@ -33,6 +34,7 @@ class Model(object):
         if isinstance(val, str):
             val = val.strip()
         self.__dict__[key] = val
+        self._changed[key] = val
 
     def keys(self):
         '''D.keys() -> a set-like object providing a view on D's keys'''
@@ -74,6 +76,9 @@ class Model(object):
 
     def save(self):
         return self._table.save(self.__dict__.copy())
+
+    def strict_save(self):
+        return self._table.strict_save(self.__dict__.copy(), self._changed.copy())
 
     def delete(self):
         pris = list(filter(lambda x: x.get('primary'), self.columns))
